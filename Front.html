@@ -1,38 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Web Text Editor</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        .toolbar {
-            border: 1px solid #ddd;
-            padding: 5px;
-            display: flex;
-            gap: 5px;
-        }
-        #editor {
-            border: 1px solid #ddd;
-            padding: 10px;
-            margin-top: 10px;
-            min-height: 200px;
-            width: 80%;
-            font-size: 16px;
-        }
-        button {
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-    </style>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <link rel="stylesheet" href="./styles/frontStyle.css">
 </head>
+
 <body>
+    <p>Status: <span id="status">Disconnected</span></p>
     <h1>Simple Web Text Editor</h1>
 
     <div class="toolbar">
@@ -46,23 +24,10 @@
 
 
     <div id="editor" contenteditable="true">
-        
     </div>
-
-    <script>
-        function formatText(command) {
-            document.execCommand(command, false, null);
-        }
-        
-        //temp function to save as txt
-        function saveContent() {
-            const content = document.getElementById('editor').innerHTML;
-            const blob = new Blob([content], { type: 'text/plain' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'document.txt';
-            link.click();
-        }
+    <script src="./js/dist_editor.js"></script>
+    <script src="./js/buttons.js">
     </script>
 </body>
+
 </html>
