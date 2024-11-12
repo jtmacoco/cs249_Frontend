@@ -15,7 +15,12 @@ function Document() {
     useEffect(() => {
         const s = io('http://localhost:8000')
         setSocket(s)
-        setStatus('Connect')
+        s.on('connect',()=>{
+            setStatus('Connect')
+        })
+        s.on('disconnect',()=>{
+            setStatus('Disconnect')
+        })
         s.on('documentUpdate', (content) => {
             if (editorRef.current) {
                 isRemoteUpdate.current=true
@@ -26,7 +31,7 @@ function Document() {
             setStatus('Disconnect')
             s.disconnect()
         }
-    }, [])
+    }, [socket])
   const handleEditorChange = useCallback((value, event) => {
         if(isRemoteUpdate.current){
             isRemoteUpdate.current=false
