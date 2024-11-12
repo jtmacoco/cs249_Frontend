@@ -1,6 +1,6 @@
 import { Editor } from "@monaco-editor/react";
 import './Document.css'
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef} from 'react'
 import io from 'socket.io-client';
 function Document() {
     const [status, setStatus] = useState('Disconnected');
@@ -8,7 +8,7 @@ function Document() {
     const [socket, setSocket] = useState()
     const isRemoteUpdate = useRef(false); 
     const editorDidMount = (editor, monaco) => {
-        console.log("Editor is mounted", editor);
+        //console.log("Editor is mounted", editor);
         editorRef.current = editor;
     };
 
@@ -32,17 +32,15 @@ function Document() {
             s.disconnect()
         }
     }, [])
-  const handleEditorChange = useCallback((value, event) => {
+  const handleEditorChange = (value, event) => {
         if(isRemoteUpdate.current){
             isRemoteUpdate.current=false
             return
         }
-        if (value.trim()&&socket) {
-            console.log(value.trim())
-            console.log("Emitting document update to server");
+        if (socket) {
             socket.emit('documentUpdate', value.trim())
         }
-    },[socket])
+    }
   
     return (
         <div>
