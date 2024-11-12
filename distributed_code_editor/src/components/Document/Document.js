@@ -31,7 +31,7 @@ function Document() {
             setStatus('Disconnect')
             s.disconnect()
         }
-    }, [socket])
+    }, [])
   const handleEditorChange = useCallback((value, event) => {
         if(isRemoteUpdate.current){
             isRemoteUpdate.current=false
