@@ -6,7 +6,7 @@ function Document() {
     const [status, setStatus] = useState('Disconnected');
     const editorRef = useRef(null);
     const [socket, setSocket] = useState()
-    const isRemoteUpdate = useRef(false); 
+    const isRemoteUpdate = useRef(false);
     const editorDidMount = (editor, monaco) => {
         //console.log("Editor is mounted", editor);
         editorRef.current = editor;
@@ -15,15 +15,15 @@ function Document() {
     useEffect(() => {
         const s = io('http://localhost:8000')
         setSocket(s)
-        s.on('connect',()=>{
+        s.on('connect', () => {
             setStatus('Connect')
         })
-        s.on('disconnect',()=>{
+        s.on('disconnect', () => {
             setStatus('Disconnect')
         })
         s.on('documentUpdate', (content) => {
             if (editorRef.current) {
-                isRemoteUpdate.current=true
+                isRemoteUpdate.current = true
                 editorRef.current.setValue(content);
             }
         });
@@ -32,16 +32,25 @@ function Document() {
             s.disconnect()
         }
     }, [])
-  const handleEditorChange = (value, event) => {
-        if(isRemoteUpdate.current){
-            isRemoteUpdate.current=false
-            return
-        }
-        if (socket) {
-            socket.emit('documentUpdate', value.trim())
-        }
+    const debounce = (func, delay) => {
+        let timer
+        return ((...args) => {
+            clearTimeout(timer)
+            timer = setTimeout(() => func(...args), delay)
+        })
     }
-  
+    const handleEditorChange =
+        debounce((value) => {
+            if (isRemoteUpdate.current) {
+                isRemoteUpdate.current = false
+                return
+            }
+            console.log(value)
+            if (socket) {
+                socket.emit('documentUpdate', value.trim())
+            }
+        },300)
+
     return (
         <div>
             <div id="status">{status}</div>
@@ -51,6 +60,7 @@ function Document() {
                 theme="vs-dark"
                 onChange={handleEditorChange}
                 onMount={editorDidMount}
+                language="python"
             />
         </div>
     )
