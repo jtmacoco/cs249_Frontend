@@ -2,6 +2,8 @@ import { Editor } from "@monaco-editor/react";
 import './Document.css'
 import { useEffect, useState, useRef} from 'react'
 import io from 'socket.io-client';
+import { useParams } from 'react-router-dom';
+import { v4 as uuidV4 } from 'uuid'
 function Document() {
     const [status, setStatus] = useState('Disconnected');
     const editorRef = useRef(null);
@@ -11,7 +13,8 @@ function Document() {
         //console.log("Editor is mounted", editor);
         editorRef.current = editor;
     };
-
+    const {DocId} = useParams();
+    const uid = uuidV4()
     useEffect(() => {
         const s = io('http://localhost:8000')
         setSocket(s)
@@ -45,9 +48,9 @@ function Document() {
                 isRemoteUpdate.current = false
                 return
             }
-            console.log(value)
             if (socket) {
-                socket.emit('documentUpdate', value.trim())
+                let pack = {value,DocId,uid}
+                socket.emit('documentUpdate', pack)
             }
         },300)
 

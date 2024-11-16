@@ -8,7 +8,7 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Navigate to={`/documents/${uuidV4()}`} />} />
-        <Route path="/documents/:id" element={<Document />} />
+        <Route path="/documents/:DocId" element={<Document/>} />
       </Routes>
     </Router>
   );
