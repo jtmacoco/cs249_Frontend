@@ -8,46 +8,16 @@ import VectorClock from "../../algorithms/vectorClock/VectorClock";
 function Document() {
     const [status, setStatus] = useState('Disconnected');
     const editorRef = useRef(null);
-    const [socket, setSocket] = useState()
+    const monacoRef = useRef(null)
+    const socket = useRef(null)
     const isRemoteUpdate = useRef(false);
     const updateBuffer = useRef([])
-    const editorDidMount = (editor, monaco) => {
-        editorRef.current = editor;
-        while (updateBuffer.current.length > 0) {
-            const content = updateBuffer.current.shift()//basically popleft
-            isRemoteUpdate.current = true;
-            editor.setValue(content)
-        }
-    };
-
     const { DocId } = useParams();
-    const uidRef = useRef(uuidV4());  // Initialize the UUID once
+    const uidRef = useRef(uuidV4());
     const uid = uidRef.current;
-    let vc = new VectorClock(DocId)
+    let vc = new VectorClock(DocId)//can make reference 
     vc.checkInVec(uid)
-    useEffect(() => {
-        const s = io('http://localhost:8000')
-        setSocket(s)
-        s.on('connect', () => {
-            setStatus('Connect')
-            s.emit('joinDocument', { DocId: DocId, uid: uid });
-        })
-        s.on('disconnect', () => {
-            setStatus('Disconnect')
-        })
-        s.on('documentUpdate', (content) => {
-            if (editorRef.current) {
-                isRemoteUpdate.current = true
-                editorRef.current.setValue(content);
-            }
-            else {
-                updateBuffer.current.push(content)
-            }
-        });
-        return () => {
-            s.disconnect()
-        }
-    }, [DocId])//add uid to this later
+    let accumulatedChanges = [];
     const debounce = (func, delay) => {
         let timer
         return ((...args) => {
@@ -55,20 +25,84 @@ function Document() {
             timer = setTimeout(() => func(...args), delay)
         })
     }
-    const handleEditorChange =
-        debounce((value) => {
-            if (isRemoteUpdate.current) {
-                isRemoteUpdate.current = false
-                return
+    const editorDidMount = (editor, monaco) => {
+        editorRef.current = editor
+        monacoRef.current = monaco
+        editor.onDidChangeModelContent((event) => {
+            if (!isRemoteUpdate.current) {
+                const changes = event.changes.map((change) => ({
+                    range: change.range,
+                    text: change.text,
+                    type: change.rangeLength === 0 ? "insert" : "delete",
+                }));
+                accumulatedChanges.push(...changes)
+                debounceBatch(changes);
             }
-            if (socket) {
-                vc.event(uid)
-                const sendVc = vc.send(uid)
-                const pack = { value, DocId, uid, sendVc }
-                socket.emit('documentUpdate', pack)
+        });
+        while (updateBuffer.current.length > 0) {
+            const content = updateBuffer.current.shift()//basically popleft
+            isRemoteUpdate.current = true;
+            editor.setValue(content)
+        }
+        isRemoteUpdate.current = false;
+    };
+    useEffect(() => {
+        const s = io('http://localhost:8000')
+        socket.current = s
+        s.on('connect', () => {
+            setStatus('Connect')
+            s.emit('joinDocument', { DocId: DocId, uid: uid });
+        })
+        s.on('disconnect', () => {
+            setStatus('Disconnect')
+        })
+        s.on('firstJoin', (content) => {
+            const update = content ? content : ""
+            if (editorRef.current) {
+                editorRef.current.setValue(update);
             }
-        }, 300)
+            else {
+                updateBuffer.current.push(update)
+            }
+        })
+        s.on('documentUpdate', (content) => {
+            const  changes  = content
+            if (editorRef.current) {
+                isRemoteUpdate.current = true
+                changes.forEach((change) => {
+                    const { type, range, text } = change
+                    editorRef.current.executeEdits('remoteUpdate', [{
+                        range: new monacoRef.current.Range(
+                            range.startLineNumber,
+                            range.startColumn,
+                            range.endLineNumber,
+                            range.endColumn,
+                        ),
+                        text: type==='insert'? text:'',
+                    }])
 
+                })
+                isRemoteUpdate.current = false
+                //editorRef.current.setValue(update);
+            }
+        });
+        return () => {
+            s.disconnect()
+        }
+    }, [DocId, uid, socket])//add uid to this later
+    const debounceBatch = debounce(() => {
+        if (isRemoteUpdate.current) {
+            isRemoteUpdate.current = false
+            return
+        }
+        if (accumulatedChanges.length > 0) {
+            vc.event(uid)
+            const sendVc = vc.send(uid)
+            const pack = { changes: accumulatedChanges, DocId: DocId, uid: uid, vc: sendVc }
+            socket.current.emit('documentUpdate', pack);
+            accumulatedChanges = [];
+        }
+    }, 300);
     return (
         <div>
             <div id="status">{status}</div>
@@ -76,7 +110,6 @@ function Document() {
                 height="100vh"
                 width="100%"
                 theme="vs-dark"
-                onChange={handleEditorChange}
                 onMount={editorDidMount}
                 language="python"
             />
