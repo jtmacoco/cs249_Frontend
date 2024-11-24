@@ -15,8 +15,9 @@ function Document() {
     const { DocId } = useParams();
     const uidRef = useRef(uuidV4());
     const uid = uidRef.current;
-    let vc = new VectorClock(DocId)//can make reference 
-    vc.checkInVec(uid)
+    const vcRef = useRef(new VectorClock(String(DocId)));
+    //let vc = new VectorClock(DocId)//can make reference 
+    //vc.checkInVec(uid)
     let accumulatedChanges = [];
     const debounce = (func, delay) => {
         let timer
@@ -30,6 +31,7 @@ function Document() {
         monacoRef.current = monaco
         editor.onDidChangeModelContent((event) => {
             if (!isRemoteUpdate.current) {
+                vcRef.current.event(uid)
                 const changes = event.changes.map((change) => ({
                     range: change.range,
                     text: change.text,
@@ -47,6 +49,7 @@ function Document() {
         isRemoteUpdate.current = false;
     };
     useEffect(() => {
+        vcRef.current.checkInVec(uid)
         const s = io('http://localhost:8000')
         socket.current = s
         s.on('connect', () => {
@@ -56,7 +59,9 @@ function Document() {
         s.on('disconnect', () => {
             setStatus('Disconnect')
         })
-        s.on('firstJoin', (content) => {
+        s.on('firstJoin', ({docData, vectorClock}) => {
+            const content=docData
+            vcRef.current.receive(vectorClock)
             const update = content ? content : ""
             if (editorRef.current) {
                 editorRef.current.setValue(update);
@@ -65,8 +70,9 @@ function Document() {
                 updateBuffer.current.push(update)
             }
         })
-        s.on('documentUpdate', (content) => {
+        s.on('documentUpdate', ({content,vectorClock}) => {
             const  changes  = content
+            vcRef.current.receive(vectorClock)
             if (editorRef.current) {
                 isRemoteUpdate.current = true
                 changes.forEach((change) => {
@@ -96,9 +102,8 @@ function Document() {
             return
         }
         if (accumulatedChanges.length > 0) {
-            vc.event(uid)
-            const sendVc = vc.send(uid)
-            const pack = { changes: accumulatedChanges, DocId: DocId, uid: uid, vc: sendVc }
+            const vcSend = vcRef.current.send(uid)
+            const pack = { changes: accumulatedChanges, DocId: DocId, uid: uid, vc: vcSend}
             socket.current.emit('documentUpdate', pack);
             accumulatedChanges = [];
         }
