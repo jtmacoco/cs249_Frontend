@@ -20,8 +20,9 @@ export default class VectorClock{
         this.vec[node_id]++
     }
     receive(received_vec){
+        console.log("recieved_vec:", received_vec)
         for (const[node,time] of Object.entries(received_vec)){
-            //console.log(`node: ${node}`)
+            console.log(`node recieve: ${node}`)
             if(!(node in this.vec))
             {
                 this.vec[node] = 0

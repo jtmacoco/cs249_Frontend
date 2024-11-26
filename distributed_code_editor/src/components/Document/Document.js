@@ -16,8 +16,6 @@ function Document() {
     const uidRef = useRef(uuidV4());
     const uid = uidRef.current;
     const vcRef = useRef(new VectorClock(String(DocId)));
-    //let vc = new VectorClock(DocId)//can make reference 
-    //vc.checkInVec(uid)
     let accumulatedChanges = [];
     const debounce = (func, delay) => {
         let timer
@@ -59,8 +57,8 @@ function Document() {
         s.on('disconnect', () => {
             setStatus('Disconnect')
         })
-        s.on('firstJoin', ({docData, vectorClock}) => {
-            const content=docData
+        s.on('firstJoin', ({ docData, vectorClock }) => {
+            const content = docData
             vcRef.current.receive(vectorClock)
             const update = content ? content : ""
             if (editorRef.current) {
@@ -70,8 +68,8 @@ function Document() {
                 updateBuffer.current.push(update)
             }
         })
-        s.on('documentUpdate', ({content,vectorClock}) => {
-            const  changes  = content
+        s.on('documentUpdate', ({ content, vectorClock }) => {
+            const changes = content
             vcRef.current.receive(vectorClock)
             if (editorRef.current) {
                 isRemoteUpdate.current = true
@@ -84,7 +82,7 @@ function Document() {
                             range.endLineNumber,
                             range.endColumn,
                         ),
-                        text: type==='insert'? text:'',
+                        text: type === 'insert' ? text : '',
                     }])
 
                 })
