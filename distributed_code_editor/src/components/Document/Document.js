@@ -5,18 +5,23 @@ import io from 'socket.io-client';
 import { useParams } from 'react-router-dom';
 import { v4 as uuidV4 } from 'uuid'
 import VectorClock from "../../algorithms/vectorClock/VectorClock";
+import CrdtRga from "../../algorithms/crdt/crdt";
 function Document() {
     const [status, setStatus] = useState('Disconnected');
     const editorRef = useRef(null);
+    const conflictRef = useRef(null);
     const monacoRef = useRef(null)
     const socket = useRef(null)
-    const isRemoteUpdate = useRef(false);
+    const isRemoteUpdate = useRef(true);
     const updateBuffer = useRef([])
     const { DocId } = useParams();
+    const crtdRef = useRef(new CrdtRga("", DocId));
     const uidRef = useRef(uuidV4());
     const uid = uidRef.current;
     const vcRef = useRef(new VectorClock(String(DocId)));
     let accumulatedChanges = [];
+
+
     const debounce = (func, delay) => {
         let timer
         return ((...args) => {
@@ -29,14 +34,14 @@ function Document() {
         monacoRef.current = monaco
         editor.onDidChangeModelContent((event) => {
             if (!isRemoteUpdate.current) {
-                vcRef.current.event(uid)
+                //vcRef.current.event(uid)
                 const changes = event.changes.map((change) => ({
                     range: change.range,
                     text: change.text,
-                    type: change.rangeLength === 0 ? "insert" : "delete",
+                    type: change.text.length > 0 ? "insert" : "delete",
                 }));
                 accumulatedChanges.push(...changes)
-                debounceBatch(changes);
+                debounceBatch();
             }
         });
         while (updateBuffer.current.length > 0) {
@@ -48,7 +53,9 @@ function Document() {
     };
     useEffect(() => {
         vcRef.current.checkInVec(uid)
-        const s = io('http://localhost:8000')
+        vcRef.current.reset()
+
+        const s = io('http://192.168.1.142:8000')
         socket.current = s
         s.on('connect', () => {
             setStatus('Connect')
@@ -67,33 +74,50 @@ function Document() {
             else {
                 updateBuffer.current.push(update)
             }
+            accumulatedChanges = []
         })
-        s.on('documentUpdate', ({ content, vectorClock }) => {
-            const changes = content
+
+        s.on('documentUpdate', ({ content, vectorClock, conflict }) => {
+            let changes = content
+            conflictRef.current = conflict
+            const m = crtdRef.current.convert(changes)
+
+            const allContainNewline = content.every(change => change.text.includes('\n'));
             vcRef.current.receive(vectorClock)
             if (editorRef.current) {
+                const model = editorRef.current.getModel();
                 isRemoteUpdate.current = true
                 changes.forEach((change) => {
-                    const { type, range, text } = change
+                    let { type, range, text } = change
+                        let lineCount = model.getLineCount()
+                    if (lineCount < range.startLineNumber && m.length > 1 && !allContainNewline ) {
+                        const additionalLines = "\n"
+                        model.applyEdits([
+                            {
+                                range: new monacoRef.current.Range(range.startLineNumber, model.getLineMaxColumn(lineCount), range.startLineNumber, model.getLineMaxColumn(lineCount)),
+                                text: additionalLines,
+                            },
+                        ]);
+                    }
+                    
                     editorRef.current.executeEdits('remoteUpdate', [{
                         range: new monacoRef.current.Range(
                             range.startLineNumber,
                             range.startColumn,
                             range.endLineNumber,
-                            range.endColumn,
+                            range.endColumn + accumulatedChanges.length,
                         ),
                         text: type === 'insert' ? text : '',
                     }])
 
                 })
                 isRemoteUpdate.current = false
-                //editorRef.current.setValue(update);
             }
         });
         return () => {
             s.disconnect()
         }
-    }, [DocId, uid, socket])//add uid to this later
+    }, [DocId, uid, socket])
     const debounceBatch = debounce(() => {
         if (isRemoteUpdate.current) {
             isRemoteUpdate.current = false
@@ -101,7 +125,8 @@ function Document() {
         }
         if (accumulatedChanges.length > 0) {
             const vcSend = vcRef.current.send(uid)
-            const pack = { changes: accumulatedChanges, DocId: DocId, uid: uid, vc: vcSend}
+            const curTime = Math.floor(Date.now() / 1000);
+            const pack = { changes: accumulatedChanges, DocId: DocId, uid: uid, vc: vcSend, curTime: curTime }
             socket.current.emit('documentUpdate', pack);
             accumulatedChanges = [];
         }
