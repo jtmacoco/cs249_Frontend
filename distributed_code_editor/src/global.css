@@ -1,0 +1,9 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+.login-background {
+    background-size:1400px;
+    background-repeat: no-repeat;
+    background-position:center;
+    background-position-y:0px;
+  }
