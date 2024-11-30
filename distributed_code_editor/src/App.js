@@ -14,7 +14,7 @@ function App() {
         <Route path="/" element={<Login/>}/>
         <Route path="/documents/:DocId" element={<Document/>} />
         <Route path="/register" element={<Register />} />
-        <Route path="/documetsDashboard" element={<DocumentsDashboard/>} />
+        <Route path="/documentsDashboard" element={<DocumentsDashboard/>} />
       </Routes>
     </Router>
   );
