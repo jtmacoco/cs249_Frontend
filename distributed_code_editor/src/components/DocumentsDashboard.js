@@ -1,7 +1,8 @@
 import "../global.css";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import Api from "../api";
+import EndPoint from "./constants/Endpoints";
 
 const DocumentsDashboard = ({ onLogout }) => {
     const [documents, setDocuments] = useState([]);
@@ -12,19 +13,20 @@ const DocumentsDashboard = ({ onLogout }) => {
     const location = useLocation();
     const username = location.state?.username;
 
-    //Redirect to login if username is missing
+    // Redirect to login if username is missing
     useEffect(() => {
         if (!username) {
             navigate("/");
         }
     }, [username, navigate]);
 
-    //Fetch shared documents
+    // Fetch shared documents
     useEffect(() => {
         const fetchSharedDocuments = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`/api/documents/${username}/shared-docs`);
+                const url = EndPoint.getFullUrl(`${EndPoint.getSharedDoc}`);
+                const response = await Api.getMethod(url, username);
                 setDocuments(response.data);
             } catch (err) {
                 if (err.response && err.response.status === 404) {
@@ -54,10 +56,13 @@ const DocumentsDashboard = ({ onLogout }) => {
 
         setIsSharing(true);
         try {
-            await axios.post(`/api/user/${username}/share-doc`, { documentId, recipient });
+            const url = EndPoint.getFullUrl(EndPoint.shareDoc);
+            await Api.postMethod(url, { documentId, recipient });
             alert(`Document shared successfully with ${recipient}!`);
 
-            const response = await axios.get(`/api/documents/${username}/getSharedDocs`);
+            // Refresh the shared documents list
+            const sharedDocsUrl = EndPoint.getFullUrl(`${EndPoint.getSharedDoc}/${username}`);
+            const response = await Api.getMethod(sharedDocsUrl);
             setDocuments(response.data);
         } catch (err) {
             if (err.response && err.response.status === 404) {

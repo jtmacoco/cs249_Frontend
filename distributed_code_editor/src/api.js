@@ -20,5 +20,21 @@ class Api{
             throw e
         }
     }
+    static getMethod = async (url, params = {}) => {
+        try {
+            const response = await Api.instance.get(url, { params });
+            return response;
+        } catch (e) {
+            console.log("Axios error details:", e);
+            if (e.response) {
+                console.log("Response error:", e.response.data);
+            } else if (e.request) {
+                console.log("Request error:", e.request);
+            } else {
+                console.log("Error message:", e.message);
+            }
+            throw e;
+        }
+    };
 }
 export default Api
