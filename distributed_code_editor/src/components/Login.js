@@ -22,7 +22,7 @@ function Login() {
                 setLoading(false)
                 return setError(errorMessage)
             }
-            nav("/documentsDashboard", {state: { username: res.data['username'] }})
+            nav("/documentsDashboard", {state: { username: res.data['data'] }})
         } catch (e) {
             setError(e.message || "failed to create account")
         }

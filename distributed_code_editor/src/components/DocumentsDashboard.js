@@ -15,7 +15,7 @@ const DocumentsDashboard = ({ onLogout }) => {
     //Redirect to login if username is missing
     useEffect(() => {
         if (!username) {
-            navigate("/login");
+            navigate("/");
         }
     }, [username, navigate]);
 
@@ -24,7 +24,7 @@ const DocumentsDashboard = ({ onLogout }) => {
         const fetchSharedDocuments = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`/api/documents/${username}/getSharedDocs`);
+                const response = await axios.get(`/api/documents/${username}/shared-docs`);
                 setDocuments(response.data);
             } catch (err) {
                 if (err.response && err.response.status === 404) {
