@@ -4,6 +4,9 @@ import { useNavigate, useLocation } from "react-router-dom";
 import Api from "../api";
 import EndPoint from "./constants/Endpoints";
 import { fetchshared } from "../controllers/FetchSharedDocs";
+import { shareDoc } from "../controllers/shareDoc";
+
+
 
 const DocumentsDashboard = ({ onLogout }) => {
     const [documents, setDocuments] = useState([]);
@@ -13,6 +16,7 @@ const DocumentsDashboard = ({ onLogout }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const email = location.state?.email;
+    const [refresh, setRefresh] = useState(false);
 
     // Redirect to login if email is missing
     useEffect(() => {
@@ -43,10 +47,11 @@ const DocumentsDashboard = ({ onLogout }) => {
         };
 
         fetchSharedDocuments();
-    }, [email]);
+    }, [email, refresh]);
 
     // Handle editing the document
     const handleEditDocument = (docId) => {
+        console.log(docId)
         navigate(`/documents/${docId}`);
     };
 
@@ -60,14 +65,26 @@ const DocumentsDashboard = ({ onLogout }) => {
 
         setIsSharing(true);
         try {
-            const url = EndPoint.getFullUrl(EndPoint.shareDoc);
-            await Api.postMethod(url, { documentId, recipient });
-            alert(`Document shared successfully with ${recipient}!`);
+            //await Api.postMethod(url, { documentId, recipient });
+            const res = await shareDoc({ documentId, recipient });
+            console.log(res.data.message)
+            if (res.status === 200) {
+                // Handle success cases
+                alert(res.data.message);
+                setRefresh((prev) => !prev);
+            } else {
+                // Handle error cases
+                if (res.status === 404) {
+                    alert(res.message || "User or document not found.");
+                } else if (res.status === 500) {
+                    alert(res.message || "An error occurred while sharing the document.");
+                } else {
+                    alert("An unknown error occurred.");
+                }
+            }
 
             // Refresh the shared documents list
-            const sharedDocsUrl = EndPoint.getFullUrl(`${EndPoint.getSharedDoc}/${email}`);
-            const response = await Api.getMethod(sharedDocsUrl);
-            setDocuments(response.data);
+            
         } catch (err) {
             if (err.response && err.response.status === 404) {
                 alert("Error: Document or recipient not found.");
