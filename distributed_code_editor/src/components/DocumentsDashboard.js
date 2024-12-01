@@ -84,7 +84,7 @@ const DocumentsDashboard = ({ onLogout }) => {
         if (onLogout) {
             onLogout();
         } else {
-            navigate("/login");
+            navigate("/");
         }
     };
 
