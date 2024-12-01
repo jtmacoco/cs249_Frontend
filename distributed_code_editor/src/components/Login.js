@@ -15,6 +15,7 @@ function Login() {
         }
         try {
             const pack = { email: email, password: password}
+            console.log(pack)
             setLoading(true)
             const res = await loginHandleSubmit(pack)
             if (!res.data['success']) {
@@ -23,8 +24,8 @@ function Login() {
                 return setError(errorMessage)
             }
             console.log("Navigating to Document Dashboard")
-            console.log("username = ", {username: res.data['data']})
-            nav("/documentsDashboard", {state: { username: res.data['data'] }})
+            console.log("email = ", {email: res.data['data']})
+            nav("/documentsDashboard", {state: {email: res.data['data']}})
         } catch (e) {
             setError(e.message || "failed to create account")
         }

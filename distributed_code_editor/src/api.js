@@ -20,9 +20,9 @@ class Api{
             throw e
         }
     }
-    static getMethod = async (url, params = {}) => {
+    static getMethod = async (url, data) => {
         try {
-            const response = await Api.instance.get(url, { params });
+            const response = await Api.instance.get(url, data);
             return response;
         } catch (e) {
             console.log("Axios error details:", e);
