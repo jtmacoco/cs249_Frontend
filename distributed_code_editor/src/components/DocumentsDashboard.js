@@ -1,8 +1,9 @@
+import "../global.css";
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const DocumentsDashboard = ({ username }) => {
+const DocumentsDashboard = ({ username, onLogout }) => {
     const [documents, setDocuments] = useState([]); // List of shared documents
     const [loading, setLoading] = useState(true); // Loading state
     const [error, setError] = useState(null); // Error message
@@ -37,24 +38,24 @@ const DocumentsDashboard = ({ username }) => {
     };
 
     // Share a document with another user
-    const handleShareDocument = async () => {
-        const documentId = prompt("Enter the Document ID to share:");
-        if (!documentId || !/^[a-f\d]{24}$/i.test(documentId)) {
-            alert("Invalid Document ID. Please try again.");
+    const handleShareDocument = async (documentId) => {
+        const recipient = prompt("Enter the username of the user you want to share this document with:");
+        if (!recipient) {
+            alert("Recipient username cannot be empty.");
             return;
         }
 
         setIsSharing(true);
         try {
-            await axios.post(`/api/user/${username}/share-doc`, { documentId });
-            alert("Document shared successfully!");
+            await axios.post(`/api/user/${username}/share-doc`, { documentId, recipient });
+            alert(`Document shared successfully with ${recipient}!`);
 
             // Refresh the documents list
             const response = await axios.get(`/api/user/${username}/shared-docs`);
             setDocuments(response.data);
         } catch (err) {
             if (err.response && err.response.status === 404) {
-                alert("Document not found. Please ensure the Document ID is correct.");
+                alert("Error: Document or recipient not found.");
             } else {
                 alert("Error sharing the document. Please try again.");
             }
@@ -64,24 +65,39 @@ const DocumentsDashboard = ({ username }) => {
         }
     };
 
+    // Handle logout
+    const handleLogout = () => {
+        if (onLogout) {
+            onLogout(); // Trigger logout callback
+        } else {
+            navigate("/login"); // Redirect to login page
+        }
+    };
+
     // Render a loading spinner if the data is still being fetched
     if (loading) return <div className="loader">Loading shared documents...</div>;
     if (error) return <p className="error-message">{error}</p>;
 
     return (
         <div className="documents-dashboard">
-            <h1>Shared Documents for {username}</h1>
-            <button onClick={handleShareDocument} disabled={isSharing}>
-                {isSharing ? "Sharing..." : "Share a Document"}
-            </button>
+            <header className="dashboard-header">
+                <h1>Shared Documents for {username}</h1>
+                <button onClick={handleLogout} className="logout-button">
+                    Logout
+                </button>
+            </header>
+            <p className="info-text">Click on a document to share it with another user.</p>
             {documents.length === 0 ? (
                 <p className="empty-documents">No shared documents available.</p>
             ) : (
                 <ul className="documents-list">
                     {documents.map((doc) => (
-                        <li key={doc._id} className="document-item">
+                        <li
+                            key={doc._id}
+                            className="document-item"
+                            onClick={() => handleShareDocument(doc._id)}
+                        >
                             <span>{doc.name || "Untitled Document"}</span>
-                            <button onClick={() => handleOpenDocument(doc._id)}>Open</button>
                         </li>
                     ))}
                 </ul>
