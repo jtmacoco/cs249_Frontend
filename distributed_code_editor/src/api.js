@@ -22,6 +22,7 @@ class Api{
     }
     static getMethod = async (url, data) => {
         try {
+            console.log("Get Method", data)
             const response = await Api.instance.get(url, data);
             return response;
         } catch (e) {

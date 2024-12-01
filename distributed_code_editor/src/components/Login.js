@@ -23,6 +23,7 @@ function Login() {
                 setLoading(false)
                 return setError(errorMessage)
             }
+            console.log(res)
             console.log("Navigating to Document Dashboard")
             console.log("email = ", {email: res.data['data']})
             nav("/documentsDashboard", {state: {email: res.data['data']}})

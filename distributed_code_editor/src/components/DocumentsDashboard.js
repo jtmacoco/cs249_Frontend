@@ -1,4 +1,4 @@
-import "../global.css";
+import "../dashboard.css";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Api from "../api";
@@ -12,7 +12,7 @@ const DocumentsDashboard = ({ onLogout }) => {
     const [isSharing, setIsSharing] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const email= location.state?.email;
+    const email = location.state?.email;
 
     // Redirect to login if email is missing
     useEffect(() => {
@@ -25,10 +25,9 @@ const DocumentsDashboard = ({ onLogout }) => {
     useEffect(() => {
         const fetchSharedDocuments = async () => {
             try {
-                //console.log("Current User ", email)
-                const data = {email: email}
+                const data = { email: email };
                 setLoading(true);
-                console.log("sending email to backend", data)
+                console.log("Sending email to backend", data);
                 const response = await fetchshared(data);
                 setDocuments(response.data);
             } catch (err) {
@@ -46,10 +45,12 @@ const DocumentsDashboard = ({ onLogout }) => {
         fetchSharedDocuments();
     }, [email]);
 
-    const handleOpenDocument = (docId) => {
-        navigate(`/documentsDashboard/${docId}`);
+    // Handle editing the document
+    const handleEditDocument = (docId) => {
+        navigate(`/documents/${docId}`);
     };
 
+    // Handle sharing the document
     const handleShareDocument = async (documentId) => {
         const recipient = prompt("Enter the email of the user you want to share this document with:");
         if (!recipient) {
@@ -96,22 +97,37 @@ const DocumentsDashboard = ({ onLogout }) => {
                 <h1>Shared Documents for {email}</h1>
                 <button onClick={handleLogout} className="logout-button">Logout</button>
             </header>
-            <p className="info-text">Click on a document to share it with another user.</p>
+            <p className="info-text">Click on a document name to edit it or click "Share" to share it with another user.</p>
             {documents.length === 0 ? (
                 <p className="empty-documents">No shared documents available.</p>
             ) : (
-                <ul className="documents-list">
-                    {documents.map((doc) => (
-                        <li key={doc._id} className="document-item">
-                            <span onClick={() => handleOpenDocument(doc._id)}>
-                                {doc.name || "Untitled Document"}
-                            </span>
-                            <button onClick={() => handleShareDocument(doc._id)} disabled={isSharing}>
-                                {isSharing ? "Sharing..." : "Share"}
-                            </button>
-                        </li>
-                    ))}
-                </ul>
+                <div className="table-container">
+                    <table className="documents-table">
+                        <thead>
+                            <tr>
+                                <th>Document Name</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {documents.map((doc) => (
+                                <tr key={doc._id}>
+                                    <td
+                                        onClick={() => handleEditDocument(doc._id)}
+                                        style={{ cursor: "pointer", textDecoration: "underline", color: "blue" }}
+                                    >
+                                        {doc.name || "Untitled Document"}
+                                    </td>
+                                    <td>
+                                        <button onClick={() => handleShareDocument(doc._id)} disabled={isSharing}>
+                                            {isSharing ? "Sharing..." : "Share"}
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
             )}
         </div>
     );

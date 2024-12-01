@@ -1,10 +1,9 @@
 import Api from "../api";
 import EndPoint from "../components/constants/Endpoints";
 export const fetchshared = async (formData) => {
-    console.log("fetchshared called")
+    console.log("fetchshared called ", formData)
     try {
-        console.log(formData)
-        const response = await Api.getMethod(EndPoint.getSharedDoc, formData)
+        const response = await Api.postMethod(EndPoint.getSharedDoc, formData)
         return response
     } catch (error) {
         console.error("Error submitting form:", error);
