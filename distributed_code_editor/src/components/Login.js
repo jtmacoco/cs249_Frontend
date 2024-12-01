@@ -22,6 +22,8 @@ function Login() {
                 setLoading(false)
                 return setError(errorMessage)
             }
+            console.log("Navigating to Document Dashboard")
+            console.log("username = ", {username: res.data['data']})
             nav("/documentsDashboard", {state: { username: res.data['data'] }})
         } catch (e) {
             setError(e.message || "failed to create account")

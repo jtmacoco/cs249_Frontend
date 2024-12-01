@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import Api from "../api";
 import EndPoint from "./constants/Endpoints";
+import { fetchshared } from "../controllers/FetchSharedDocs";
 
 const DocumentsDashboard = ({ onLogout }) => {
     const [documents, setDocuments] = useState([]);
@@ -25,8 +26,10 @@ const DocumentsDashboard = ({ onLogout }) => {
         const fetchSharedDocuments = async () => {
             try {
                 setLoading(true);
-                const url = EndPoint.getFullUrl(`${EndPoint.getSharedDoc}`);
-                const response = await Api.getMethod(url, username);
+                //console.log("Current User ", username)
+                const data = {username: username}
+                console.log("sending username to backend", data)
+                const response = await fetchshared(data);
                 setDocuments(response.data);
             } catch (err) {
                 if (err.response && err.response.status === 404) {
