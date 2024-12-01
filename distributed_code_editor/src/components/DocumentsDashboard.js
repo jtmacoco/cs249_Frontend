@@ -1,21 +1,30 @@
 import "../global.css";
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
-const DocumentsDashboard = ({ username, onLogout }) => {
-    const [documents, setDocuments] = useState([]); // List of shared documents
-    const [loading, setLoading] = useState(true); // Loading state
-    const [error, setError] = useState(null); // Error message
-    const [isSharing, setIsSharing] = useState(false); // State for sharing document
-    const navigate = useNavigate(); // React Router navigation
+const DocumentsDashboard = ({ onLogout }) => {
+    const [documents, setDocuments] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [isSharing, setIsSharing] = useState(false);
+    const navigate = useNavigate();
+    const location = useLocation();
+    const username = location.state?.username;
 
-    //Fetch shared documents from the backend
+    //Redirect to login if username is missing
+    useEffect(() => {
+        if (!username) {
+            navigate("/login");
+        }
+    }, [username, navigate]);
+
+    //Fetch shared documents
     useEffect(() => {
         const fetchSharedDocuments = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get("/api/documents/${username}/getSharedDocs");
+                const response = await axios.get(`/api/documents/${username}/getSharedDocs`);
                 setDocuments(response.data);
             } catch (err) {
                 if (err.response && err.response.status === 404) {
@@ -32,12 +41,10 @@ const DocumentsDashboard = ({ username, onLogout }) => {
         fetchSharedDocuments();
     }, [username]);
 
-    //Navigate to the Document editor
     const handleOpenDocument = (docId) => {
         navigate(`/documentsDashboard/${docId}`);
     };
 
-    //share a document with another user
     const handleShareDocument = async (documentId) => {
         const recipient = prompt("Enter the username of the user you want to share this document with:");
         if (!recipient) {
@@ -50,8 +57,7 @@ const DocumentsDashboard = ({ username, onLogout }) => {
             await axios.post(`/api/user/${username}/share-doc`, { documentId, recipient });
             alert(`Document shared successfully with ${recipient}!`);
 
-            // Refresh the documents list
-            const response = await axios.get(`/api/user/${username}/shared-docs`);
+            const response = await axios.get(`/api/documents/${username}/getSharedDocs`);
             setDocuments(response.data);
         } catch (err) {
             if (err.response && err.response.status === 404) {
@@ -65,16 +71,14 @@ const DocumentsDashboard = ({ username, onLogout }) => {
         }
     };
 
-    //Handle logout
     const handleLogout = () => {
         if (onLogout) {
-            onLogout(); // Trigger logout callback
+            onLogout();
         } else {
-            navigate("/login"); // Redirect to login page
+            navigate("/login");
         }
     };
 
-    //Render a loading spinner if the data is still being fetched
     if (loading) return <div className="loader">Loading shared documents...</div>;
     if (error) return <p className="error-message">{error}</p>;
 
@@ -82,9 +86,7 @@ const DocumentsDashboard = ({ username, onLogout }) => {
         <div className="documents-dashboard">
             <header className="dashboard-header">
                 <h1>Shared Documents for {username}</h1>
-                <button onClick={handleLogout} className="logout-button">
-                    Logout
-                </button>
+                <button onClick={handleLogout} className="logout-button">Logout</button>
             </header>
             <p className="info-text">Click on a document to share it with another user.</p>
             {documents.length === 0 ? (
@@ -92,12 +94,13 @@ const DocumentsDashboard = ({ username, onLogout }) => {
             ) : (
                 <ul className="documents-list">
                     {documents.map((doc) => (
-                        <li
-                            key={doc._id}
-                            className="document-item"
-                            onClick={() => handleShareDocument(doc._id)}
-                        >
-                            <span>{doc.name || "Untitled Document"}</span>
+                        <li key={doc._id} className="document-item">
+                            <span onClick={() => handleOpenDocument(doc._id)}>
+                                {doc.name || "Untitled Document"}
+                            </span>
+                            <button onClick={() => handleShareDocument(doc._id)} disabled={isSharing}>
+                                {isSharing ? "Sharing..." : "Share"}
+                            </button>
                         </li>
                     ))}
                 </ul>
