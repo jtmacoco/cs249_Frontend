@@ -10,12 +10,12 @@ const DocumentsDashboard = ({ username, onLogout }) => {
     const [isSharing, setIsSharing] = useState(false); // State for sharing document
     const navigate = useNavigate(); // React Router navigation
 
-    // Fetch shared documents from the backend
+    //Fetch shared documents from the backend
     useEffect(() => {
         const fetchSharedDocuments = async () => {
             try {
                 setLoading(true);
-                const response = await axios.get(`/api/user/${username}/shared-docs`);
+                const response = await axios.get("/api/documents/${username}/getSharedDocs");
                 setDocuments(response.data);
             } catch (err) {
                 if (err.response && err.response.status === 404) {
@@ -32,12 +32,12 @@ const DocumentsDashboard = ({ username, onLogout }) => {
         fetchSharedDocuments();
     }, [username]);
 
-    // Navigate to the Document editor
+    //Navigate to the Document editor
     const handleOpenDocument = (docId) => {
         navigate(`/documentsDashboard/${docId}`);
     };
 
-    // Share a document with another user
+    //share a document with another user
     const handleShareDocument = async (documentId) => {
         const recipient = prompt("Enter the username of the user you want to share this document with:");
         if (!recipient) {
@@ -65,7 +65,7 @@ const DocumentsDashboard = ({ username, onLogout }) => {
         }
     };
 
-    // Handle logout
+    //Handle logout
     const handleLogout = () => {
         if (onLogout) {
             onLogout(); // Trigger logout callback
@@ -74,7 +74,7 @@ const DocumentsDashboard = ({ username, onLogout }) => {
         }
     };
 
-    // Render a loading spinner if the data is still being fetched
+    //Render a loading spinner if the data is still being fetched
     if (loading) return <div className="loader">Loading shared documents...</div>;
     if (error) return <p className="error-message">{error}</p>;
 
