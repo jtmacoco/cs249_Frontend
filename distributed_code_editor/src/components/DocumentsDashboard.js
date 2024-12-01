@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./DocumentsDashboard.css";
 
 const DocumentsDashboard = ({ username }) => {
     const [documents, setDocuments] = useState([]); // List of shared documents
