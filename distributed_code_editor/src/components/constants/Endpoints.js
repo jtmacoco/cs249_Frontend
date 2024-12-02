@@ -4,6 +4,7 @@ class EndPoint {
     static login = 'user/login';
     static getSharedDoc = '/document/shared-docs';
     static shareDoc = '/document/share-doc';
+    static myDocs = '/document/my-doc';
     static getFullUrl(endpoint) {
       return `${this.baseUrl}${endpoint}`;
     }

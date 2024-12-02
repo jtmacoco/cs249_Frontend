@@ -63,3 +63,24 @@
 .info-text {
     margin: 20px 0;
 }
+
+.tabs-container {
+    display: flex;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 10px 20px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    margin-right: 10px;
+    border-radius: 5px;
+    transition: background-color 0.2s ease;
+}
+
+.tab.active {
+    background-color: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
