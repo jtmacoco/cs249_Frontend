@@ -4,7 +4,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { fetchshared } from "../controllers/FetchSharedDocs";
 import { shareDoc } from "../controllers/shareDoc";
 import { fetchMyDocuments } from "../controllers/fetchMyDocuments"; // Import the new function
-
+import CreateTextBox from "./CreateTextBox";
 const DocumentsDashboard = ({ onLogout }) => {
     const [documents, setDocuments] = useState([]);
     const [myDocuments, setMyDocuments] = useState([]); // To store user's own documents
@@ -16,6 +16,7 @@ const DocumentsDashboard = ({ onLogout }) => {
     const location = useLocation();
     const email = location.state?.email;
     const [refresh, setRefresh] = useState(false);
+    const [isTextBoxVisible,setIsTextBoxVisible]=useState(false)
 
     // Redirect to login if email is missing
     useEffect(() => {
@@ -91,7 +92,6 @@ const DocumentsDashboard = ({ onLogout }) => {
             setIsSharing(false);
         }
     };
-
     const handleLogout = () => {
         if (onLogout) {
             onLogout();
@@ -100,16 +100,21 @@ const DocumentsDashboard = ({ onLogout }) => {
         }
     };
 
+    const handleTextBox = () =>{
+        setIsTextBoxVisible(!isTextBoxVisible)
+    }
     if (loading) return <div className="loader">Loading documents...</div>;
     if (error) return <p className="error-message">{error}</p>;
 
     return (
         <div className="documents-dashboard bg-dark_back bg-cover min-h-screen min-w-screen text-white">
-             <nav className="bg-dark_border sticky top-0  h-14 flex items-center  ">
-            <div key="navLinks reg" className="justify-center items-center mx-auto ">
+            {isTextBoxVisible && <CreateTextBox  email={email} handleTextBox={handleTextBox}/>}
+             <nav className="bg-dark_border sticky top-0  h-16 flex items-center py-4  ">
+            <div className="flex justify-end items-center mx-auto  ">
                 <p> Documents Dash Board For {email}</p>
             </div>
-            <button onClick={handleLogout} className="logout-button text-white bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 ">Logout</button>
+            <button onClick={handleTextBox} className="text-white bg-green-800 hover:bg-green-700 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 ">Creat Document</button>
+            <button onClick={handleLogout} className="text-white bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 ">Logout</button>
         </nav>
             <div className="pt-10 flex items-center justify-center mx-auto ">
                 <div className="mb-4" >

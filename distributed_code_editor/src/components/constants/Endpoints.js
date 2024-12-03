@@ -5,6 +5,7 @@ class EndPoint {
     static getSharedDoc = '/document/shared-docs';
     static shareDoc = '/document/share-doc';
     static myDocs = '/document/my-doc';
+    static createDocument = '/document/create-document'
     static getFullUrl(endpoint) {
       return `${this.baseUrl}${endpoint}`;
     }
