@@ -1,4 +1,4 @@
-import "../dashboard.css";
+//import "../dashboard.css";
 import React, { useEffect, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { fetchshared } from "../controllers/FetchSharedDocs";
@@ -34,11 +34,19 @@ const DocumentsDashboard = ({ onLogout }) => {
 
                 // Fetch shared documents
                 const sharedResponse = await fetchshared(data);
-                setDocuments(sharedResponse.data);
+                if(!sharedResponse.data['message'])
+                {
+                    setDocuments(sharedResponse.data);
+                }
 
                 // Fetch user's own documents
                 const myDocsResponse = await fetchMyDocuments(data);
-                setMyDocuments(myDocsResponse.data);
+                if (!myDocsResponse.data['message']) {
+                    console.log("YES")
+                    setMyDocuments(myDocsResponse.data);
+                }
+                
+             
             } catch (err) {
                 if (err.response && err.response.status === 404) {
                     setError("User not found or no documents available.");
@@ -96,48 +104,54 @@ const DocumentsDashboard = ({ onLogout }) => {
     if (error) return <p className="error-message">{error}</p>;
 
     return (
-        <div className="documents-dashboard">
-            <header className="dashboard-header">
-                <h1>Documents Dashboard for {email}</h1>
-                <button onClick={handleLogout} className="logout-button">Logout</button>
-            </header>
-            <div className="tabs-container">
-                <button
-                    className={`tab ${activeTab === "my" ? "active" : ""}`}
-                    onClick={() => setActiveTab("my")}
-                >
-                    My Documents
-                </button>
-                <button
-                    className={`tab ${activeTab === "shared" ? "active" : ""}`}
-                    onClick={() => setActiveTab("shared")}
-                >
-                    Shared Documents
-                </button>
+        <div className="documents-dashboard bg-dark_back bg-cover min-h-screen min-w-screen text-white">
+             <nav className="bg-dark_border sticky top-0  h-14 flex items-center  ">
+            <div key="navLinks reg" className="justify-center items-center mx-auto ">
+                <p> Documents Dash Board For {email}</p>
+            </div>
+            <button onClick={handleLogout} className="logout-button text-white bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2 ">Logout</button>
+        </nav>
+            <div className="pt-10 flex items-center justify-center mx-auto ">
+                <div className="mb-4" >
+                    <button
+                        className={`tab ${activeTab === "my" ? "active" : ""} text-white bg-blue-800 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-20 mb-2 `}
+                        onClick={() => setActiveTab("my")}
+                    >
+                        My Documents
+                    </button>
+                    <button
+                        className={`tab ${activeTab === "shared" ? "active" : ""} text-white bg-blue-800 hover:bg-blue-700 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5 mr-2 mb-2`}
+                        onClick={() => setActiveTab("shared")}
+                    >
+                        Shared Documents
+                    </button>
+                </div>
             </div>
             {activeTab === "my" ? (
                 myDocuments.length === 0 ? (
-                    <p className="empty-documents">No documents available.</p>
+                    <p className="text-center text-lg">No documents available.</p>
                 ) : (
-                    <div className="table-container">
-                        <table className="documents-table">
-                            <thead>
-                                <tr>
-                                    <th>Document Name</th>
-                                    <th>Action</th>
+                    <div class="px-12 relative overflow-x-auto">
+                       <table className="w-full text-left rtl:text-right text-white">
+                        <thead class="text-white bg-gray-50 dark:bg-gray-700">
+                            <tr>
+                                    <th className="text-center align-middle px-4 py-2 ">Document Name</th>
+                                    <th className="text-center align-middle px-4 py-2 ">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="bg-dark_border">
                                 {myDocuments.map((doc) => (
                                     <tr key={doc._id}>
-                                        <td
-                                            onClick={() => handleEditDocument(doc._id)}
-                                            style={{ cursor: "pointer", textDecoration: "underline", color: "blue" }}
-                                        >
-                                            {doc.name || "Untitled Document"}
-                                        </td>
-                                        <td>
-                                            <button onClick={() => handleShareDocument(doc._id)} disabled={isSharing}>
+                                       <td className="text-center align-middle px-4 py-2">
+                                            <button
+                                                onClick={() => handleEditDocument(doc._id)}
+                                                className="cursor-pointer hover:underline text-blue-500"
+                                            >
+                                                {doc.name || "Untitled Document"}
+                                            </button>
+                                            </td>
+                                            <td className="text-center align-middle px-4 py-2">
+                                            <button onClick={() => handleShareDocument(doc._id)} disabled={isSharing} className="hover:underline">
                                                 {isSharing ? "Sharing..." : "Share"}
                                             </button>
                                         </td>
@@ -149,27 +163,29 @@ const DocumentsDashboard = ({ onLogout }) => {
                 )
             ) : (
                 documents.length === 0 ? (
-                    <p className="empty-documents">No shared documents available.</p>
+                    <p className="text-center text-lg">No shared documents available.</p>
                 ) : (
-                    <div className="table-container">
-                        <table className="documents-table">
-                            <thead>
+                    <div class="px-12 relative overflow-x-auto">
+                        <table className="w-full text-left rtl:text-right text-white">
+                            <thead class="text-white bg-gray-50 dark:bg-gray-700">
                                 <tr>
-                                    <th>Document Name</th>
-                                    <th>Action</th>
+                                    <th className="text-center align-middle px-4 py-2 ">Document Name</th>
+                                    <th className="text-center align-middle px-4 py-2 ">Action</th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody className="bg-dark_border">
                                 {documents.map((doc) => (
                                     <tr key={doc._id}>
-                                        <td
-                                            onClick={() => handleEditDocument(doc._id)}
-                                            style={{ cursor: "pointer", textDecoration: "underline", color: "blue" }}
-                                        >
-                                            {doc.name || "Untitled Document"}
+                                        <td className="text-center align-middle px-4 py-2">
+                                            <button
+                                                onClick={() => handleEditDocument(doc._id)}
+                                                className="cursor-pointer hover:underline text-blue-500"
+                                            >
+                                                {doc.name || "Untitled Document"}
+                                            </button>
                                         </td>
-                                        <td>
-                                            <button onClick={() => handleShareDocument(doc._id)} disabled={isSharing}>
+                                        <td className="text-center align-middle px-4 py-2">
+                                            <button onClick={() => handleShareDocument(doc._id)} disabled={isSharing} className="hover:underline">
                                                 {isSharing ? "Sharing..." : "Share"}
                                             </button>
                                         </td>
