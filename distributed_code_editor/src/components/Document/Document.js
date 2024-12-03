@@ -6,8 +6,10 @@ import { useParams } from 'react-router-dom';
 import { v4 as uuidV4 } from 'uuid'
 import VectorClock from "../../algorithms/vectorClock/VectorClock";
 import CrdtRga from "../../algorithms/crdt/crdt";
+import DocumentsNav from "../DocumentsNav";
 function Document() {
     const [status, setStatus] = useState('Disconnected');
+    const [documentState, setDocumentState] = useState('')
     const editorRef = useRef(null);
     const conflictRef = useRef(null);
     const monacoRef = useRef(null)
@@ -16,7 +18,7 @@ function Document() {
     const updateBuffer = useRef([])
     const { DocId } = useParams();
     const crtdRef = useRef(new CrdtRga("", DocId));
-    const uidRef = useRef(uuidV4());
+    const uidRef = useRef(uuidV4());// change this to current user now
     const uid = uidRef.current;
     const vcRef = useRef(new VectorClock(String(DocId)));
     let accumulatedChanges = [];
@@ -33,6 +35,7 @@ function Document() {
         editorRef.current = editor
         monacoRef.current = monaco
         editor.onDidChangeModelContent((event) => {
+           
             if (!isRemoteUpdate.current) {
                 //vcRef.current.event(uid)
                 const changes = event.changes.map((change) => ({
@@ -124,6 +127,7 @@ function Document() {
             return
         }
         if (accumulatedChanges.length > 0) {
+            setDocumentState(editorRef.current.getValue())
             const vcSend = vcRef.current.send(uid)
             const curTime = Math.floor(Date.now() / 1000);
             const pack = { changes: accumulatedChanges, DocId: DocId, uid: uid, vc: vcSend, curTime: curTime }
@@ -133,7 +137,7 @@ function Document() {
     }, 300);
     return (
         <div>
-            <div id="status">{status}</div>
+            <DocumentsNav document_id={DocId} editorContent={documentState}/>
             <Editor
                 height="100vh"
                 width="100%"
