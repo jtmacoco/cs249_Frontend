@@ -6,9 +6,7 @@ export default function DocumentsNav({editorContent,document_id}) {
     const [docName,setDocName] = useState('')
     const getDocumentNames = async() =>{
         try{
-            console.log("IN FUNC")
             const docName = await getDocumentName({_id:document_id})
-            console.log("docName:",docName.data['data'])
             setDocName(docName.data['data'])
         }catch(error){
             throw error
@@ -16,7 +14,6 @@ export default function DocumentsNav({editorContent,document_id}) {
     }
     useEffect(() =>{
         getDocumentNames()
-        console.log("DOC NAME:",docName)
 
     },[document_id])
     const downloadFile = () => {
