@@ -26,7 +26,7 @@ export default function DocumentsNav({editorContent,document_id}) {
     return (
         <nav className="bg-stone-600 flex sticky top-0 h-16 items-center py-4">
         <div className="flex justify-between w-full mx-12">
-            <p className="text-white">{docName}</p>
+            <p className="text-white text-lg">{docName}</p>
             <button
             onClick={downloadFile}
                 className="text-white bg-purple-800 hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-gray-300 font-medium rounded-lg text-sm px-5 py-2.5">

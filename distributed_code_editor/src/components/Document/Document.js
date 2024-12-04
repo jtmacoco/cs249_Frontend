@@ -35,8 +35,8 @@ function Document() {
         editorRef.current = editor
         monacoRef.current = monaco
         editor.onDidChangeModelContent((event) => {
-           
             if (!isRemoteUpdate.current) {
+                //console.log("NOT REMOTE")
                 //vcRef.current.event(uid)
                 const changes = event.changes.map((change) => ({
                     range: change.range,
@@ -55,32 +55,44 @@ function Document() {
         isRemoteUpdate.current = false;
     };
     useEffect(() => {
+        return () => {
+            if (socket.current) {
+                socket.current.disconnect();
+                socket.current = null;
+            }
+        };
+    }, []);
+
+    useEffect(() => {
         vcRef.current.checkInVec(uid)
         vcRef.current.reset()
 
-        const s = io('http://192.168.1.142:8000')
+        const s = io('192.168.1.142:4000', { autoConnect: true })
         socket.current = s
+        s.on('disconnect', () => {
+            setStatus('Disconnect')
+        })
         s.on('connect', () => {
             setStatus('Connect')
             s.emit('joinDocument', { DocId: DocId, uid: uid });
         })
-        s.on('disconnect', () => {
-            setStatus('Disconnect')
-        })
+
         s.on('firstJoin', ({ docData, vectorClock }) => {
+            //console.log("ACUMULATED CHANGES:",accumulatedChanges)
             const content = docData
             vcRef.current.receive(vectorClock)
             const update = content ? content : ""
             if (editorRef.current) {
                 editorRef.current.setValue(update);
             }
-            else {
-                updateBuffer.current.push(update)
-            }
+            //else {
+            //updateBuffer.current.push(update)
+            //}
             accumulatedChanges = []
         })
 
         s.on('documentUpdate', ({ content, vectorClock, conflict }) => {
+
             let changes = content
             conflictRef.current = conflict
             const m = crtdRef.current.convert(changes)
@@ -92,8 +104,8 @@ function Document() {
                 isRemoteUpdate.current = true
                 changes.forEach((change) => {
                     let { type, range, text } = change
-                        let lineCount = model.getLineCount()
-                    if (lineCount < range.startLineNumber && m.length > 1 && !allContainNewline ) {
+                    let lineCount = model.getLineCount()
+                    if (lineCount < range.startLineNumber && m.length > 1 && !allContainNewline) {//copy past multiple lines even when other users don't have those lines
                         const additionalLines = "\n"
                         model.applyEdits([
                             {
@@ -102,7 +114,7 @@ function Document() {
                             },
                         ]);
                     }
-                    
+
                     editorRef.current.executeEdits('remoteUpdate', [{
                         range: new monacoRef.current.Range(
                             range.startLineNumber,
@@ -126,7 +138,9 @@ function Document() {
             isRemoteUpdate.current = false
             return
         }
-        if (accumulatedChanges.length > 0) {
+        console.log(socket, socket.current['connected'])
+        if (accumulatedChanges.length > 0 && socket.current['connected']) {
+            console.log("IN THE IF ")
             setDocumentState(editorRef.current.getValue())
             const vcSend = vcRef.current.send(uid)
             const curTime = Math.floor(Date.now() / 1000);
@@ -137,7 +151,8 @@ function Document() {
     }, 300);
     return (
         <div>
-            <DocumentsNav document_id={DocId} editorContent={documentState}/>
+            <DocumentsNav document_id={DocId} editorContent={documentState} />
+            <div>{status}</div>
             <Editor
                 height="100vh"
                 width="100%"

@@ -23,7 +23,9 @@ class Api{
     static getMethod = async (url, data) => {
         try {
             console.log("Get Method", data)
-            const response = await Api.instance.get(url, data);
+
+            const response = await Api.instance.get(url,
+                {params: data});
             return response;
         } catch (e) {
             console.log("Axios error details:", e);
