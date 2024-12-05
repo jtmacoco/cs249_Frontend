@@ -1,5 +1,5 @@
 class EndPoint {
-    static baseUrl = "http://192.168.1.142:8000/api/";
+    static baseUrl = "http://3.130.25.213:8000/api/";
     //static baseUrl = "http://localhost:8000/api/";
     static register = 'user/register';
     static login = 'user/login';

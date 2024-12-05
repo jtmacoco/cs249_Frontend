@@ -67,7 +67,7 @@ function Document() {
         vcRef.current.checkInVec(uid)
         vcRef.current.reset()
 
-        const s = io('http://localhost:4000/', { autoConnect: true })
+        const s = io('http://3.130.25.213:4000/', { autoConnect: true })
         socket.current = s
         s.on('disconnect', () => {
             setStatus('Disconnect')
