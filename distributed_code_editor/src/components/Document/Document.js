@@ -18,7 +18,7 @@ function Document() {
     const updateBuffer = useRef([])
     const { DocId } = useParams();
     const crtdRef = useRef(new CrdtRga("", DocId));
-    const uidRef = useRef(uuidV4());// change this to current user now
+    const uidRef = useRef(uuidV4());
     const uid = uidRef.current;
     const vcRef = useRef(new VectorClock(String(DocId)));
     let accumulatedChanges = [];
@@ -68,8 +68,10 @@ function Document() {
         vcRef.current.reset()
 
         const s = io('http://localhost:4000/', { autoConnect: true })
+        console.log(s)
         socket.current = s
         s.on('disconnect', () => {
+            console.log("DISCONNECTED")
             setStatus('Disconnect')
         })
         s.on('connect', () => {
@@ -85,10 +87,10 @@ function Document() {
             if (editorRef.current) {
                 editorRef.current.setValue(update);
             }
-            //else {
-            //updateBuffer.current.push(update)
-            //}
-            accumulatedChanges = []
+            else {
+            updateBuffer.current.push(update)
+            }
+            //accumulatedChanges = []
         })
 
         s.on('documentUpdate', ({ content, vectorClock, conflict }) => {
@@ -159,6 +161,11 @@ function Document() {
                 theme="vs-dark"
                 onMount={editorDidMount}
                 language="python"
+                options={{
+                    autoClosingBrackets: 'never', // Disable auto-closing brackets
+                    autoClosingQuotes: 'never',  // Disable auto-closing quotes (optional)
+                    autoIndent: 'none',          // Disable auto-indentation (optional)
+                }}
             />
         </div>
     )

@@ -2,12 +2,14 @@ import "../global.css";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { loginHandleSubmit } from "../controllers/LoginCtrl";
+import { useAuth } from "../context/AuthContext";
 function Login() {
     const [loading, setLoading] = useState(false);
     const [email, setEmail] = useState();
     const [password, setPassword] = useState();
     const [error, setError] = useState('');
     const nav = useNavigate();
+    const { login } = useAuth();
     const handleSubmit = async (e) => {
         e.preventDefault()
         if(!email || !password){
@@ -15,7 +17,6 @@ function Login() {
         }
         try {
             const pack = { email: email, password: password}
-            console.log(pack)
             setLoading(true)
             const res = await loginHandleSubmit(pack)
             if (!res.data['success']) {
@@ -23,6 +24,7 @@ function Login() {
                 setLoading(false)
                 return setError(errorMessage)
             }
+            login(res.data['data'],res.data['token'])
             console.log(res)
             console.log("Navigating to Document Dashboard")
             console.log("email = ", {email: res.data['data']})
