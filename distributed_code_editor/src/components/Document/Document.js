@@ -90,7 +90,7 @@ function Document() {
             else {
             updateBuffer.current.push(update)
             }
-            //accumulatedChanges = []
+            accumulatedChanges = []
         })
 
         s.on('documentUpdate', ({ content, vectorClock, conflict }) => {
